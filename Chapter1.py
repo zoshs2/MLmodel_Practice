@@ -104,3 +104,6 @@ print(data.loc[:,'class'].value_counts())
 # KNN (여기서는 3-NN)을 쓴다.
 from sklearn.neighbors import KNeighborsClassifier
 knn = KNeighborsClassifier(n_neighbors=3) # 3-NN
+
+
+# Today will be rested.
