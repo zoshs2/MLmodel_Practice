@@ -107,3 +107,4 @@ knn = KNeighborsClassifier(n_neighbors=3) # 3-NN
 
 
 # Today will be rested.
+x, y = data.loc[:, data.columns != 'class'], data.loc[:, 'class']
