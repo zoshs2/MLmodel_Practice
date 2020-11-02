@@ -169,6 +169,7 @@ for i, k in enumerate(neig):
     test_accuracy.append(knn.score(x_test, y_test))
 
 # Plot
+'''
 plt.figure(figsize=(13,8))
 plt.plot(neig, test_accuracy, label="Testing Accuracy")
 plt.plot(neig, train_accuracy, label="Training Accuracy")
@@ -178,4 +179,84 @@ plt.xlabel("Number of Neighbors")
 plt.ylabel("Accuracy")
 plt.xticks(neig)
 plt.show()
+'''
 print("Best accuracy is {} with K = {}".format(np.max(test_accuracy), 1+test_accuracy.index(np.max(test_accuracy))))
+
+## REGRESSION (Linear & Logistic Regression)
+# This orthopedic patients(정형외과 환자) data is not proper for regression 
+# so I only use two features are 'sacral_slope' & 'pelvic_incidence' of abnormal.
+# -> I consider feature is 'pelvic_incidence' and target is 'sacral_slope'.
+# -> Lets look at scatter plot so as to understand it better.
+# -> reshape(-1,1): If you do not use it shape of x or y becames (210,)
+#    and we cannot use it in sklearn, so we use shape(-1,1)
+#    and shape of x or y be (210, 1).
+
+# create data1 that includes 'pelvic_incidence' that is feature(input).
+# and 'sacral_slope' that is target variable(output; label).
+data1 = data[data['class']=='Abnormal'] # DataFrame
+x = np.array(data1.loc[:,'pelvic_incidence']).reshape(-1,1)
+y = np.array(data1.loc[:,'sacral_slope']).reshape(-1,1)
+# Scatter
+'''
+plt.figure(figsize=(10,10))
+plt.scatter(x=x, y=y)
+plt.xlabel('pelvic_incidence')
+plt.ylabel('sacral_slope')
+plt.show()
+'''
+# Now we have our data to make regression.
+# In regression problems, target value is continuously varying variable such as
+# price of house or sacral_slope. 
+# Lets fit line into this points...!!!
+
+# Linear Regression
+# y = ax + b where y is target's value, x = feature's value and "a = parameter of model".
+# 여기서 a가 train되는 것이다.!!!!
+# We choose parameter of model(a) according to minimum error function that is loss function.
+# -> loss function 을 가장 작게 만드는 model의 파라미터 a를 설정해야한다.
+# In Linear Regression we use Ordinary Least Square(OLS) as loss function.
+# OLS : sum all residuals but some positive and negative residuals can cancel each other
+#       so we sum of square of residuals. It is called OLS.
+# Score : Score uses R^2 method that is ((y_pred - y_mean)^2) / (y_actual - y_mean)^2)
+
+from sklearn.linear_model import LinearRegression
+reg = LinearRegression()
+# Predict Space
+predict_space = np.linspace(min(x), max(x)).reshape(-1,1)
+# Fit(Train)
+reg.fit(x,y)
+# Predict
+predicted = reg.predict(predict_space)
+# R^2 method = ((y_pred - y_mean)^2) / ((y_actual - y_mean)^2)
+print("R^2 score : ", reg.score(x, y))
+# Plot regression line and scatter
+'''
+plt.plot(predict_space, predicted, color="black", linewidth=3)
+plt.scatter(x=x, y=y)
+plt.xlabel("pelvic_incidence")
+plt.ylabel("sacral_slope")
+plt.show()
+'''
+
+## Cross Validation
+# In KNN method before, we use train_test_split with random_state that split exactly
+# same at each time. (random_state는 일종의 seed로서 매번 똑같은 분포로 나뉘어진다.)
+# However, if we do not use random_state, data is split differently at each time and
+# according to split accuracy will be different.
+# Therefore, we can conclude that model performance is 'dependent' on train_test_split.
+# For example you split, fit and predict data 5 times and
+# accuracies are 0.89, 0.9, 0.91, 0.92 and 0.93, respectively.
+# Which accuracy do you use? Do you know what accuracy will be at 6th times split, train and predict.
+# The answer is I don't know but if I use 'Cross Validation(CV)' I can find acceptable accuracy.
+
+# K folds = K fold CV
+# When K is increase, computationally cost is increasing.
+# cross_val_score(reg, x, y, cv=5) : use reg(Linear Regression) with x and y
+# that we define at above and K is 5. It means 5 times(split, train, predict)
+from sklearn.model_selection import cross_val_score
+reg = LinearRegression()
+k = 5
+cv_result = cross_val_score(reg,x,y,cv=k) # uses R^2 as score
+print("CV Scores : ", cv_result) 
+print("CV scores average : ", np.sum(cv_result)/k)
+# -> reg.fit 즉, 아직 학습을 안시켜서 score가 낮음.
