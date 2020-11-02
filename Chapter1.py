@@ -61,10 +61,11 @@ plt.show()
 # But, you don't know yet how many normal(green) & abnormal(red) classes are there.
 # - seaborn(sns) library has countplot() that counts number of classes. (시각적으로 보여줌)
 # - Also, you can print it with .value_counts() method of pandas(pd). (수치적으로 보여줌)
-
+'''
 print(sns.countplot(x="class", data=data))
 print(data.loc[:,'class'].value_counts())
 # -> Abnormal : 210 & normal : 100
+'''
 
 ## K-Nearest Neighbors (KNN) : Classification method.
 # 현실에서는 특정한 확률 분포를 따르지 않는 경우가 매우 많다.
@@ -108,3 +109,73 @@ knn = KNeighborsClassifier(n_neighbors=3) # 3-NN
 
 # Today will be rested.
 x, y = data.loc[:, data.columns != 'class'], data.loc[:, 'class']
+print("type(x) : ", type(x), "\n and type(y) : ", type(y))
+# x : <class 'pandas.core.frame.DataFrame'>
+# y : <class 'pandas.core.series.Series'>
+knn.fit(x,y) # train the knn model.
+prediction = knn.predict(x)
+print("Prediction: {}".format(prediction))
+
+# Well, we fit(train) data(model) and predict it with KNN.
+# So, do we predict correct or what is our accuracy or the accuracy is the best metric to 
+# evaluate our result? Lets give answer of this questions.
+# Measuring model performance :
+# Accuracy which is the fraction of correct predictions is commonly used metric.
+# We will use it know but there is another problem.
+
+# As you see I train data with x(features) and again predict the x(features). Yes 
+# you are reading right but yes you are right again it is absurd :)
+# -> 즉, 트레이닝 한 데이터로 predict한다는게 말이 안된다는 말.
+
+# Therefore we need to split our data train and test sets.
+# 트레이닝 전에 train data와 test data 을 나눠줘야 한다.
+
+# Train & Test split
+from sklearn.model_selection import train_test_split
+x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.3,random_state=1)
+knn = KNeighborsClassifier(n_neighbors=3)
+# x,y = data.loc[:, data.columns != 'class'], data.loc[:, 'class']
+knn.fit(x_train, y_train)
+prediction = knn.predict(x_test)
+print("With KNN(K=3) accuracy is : ", knn.score(x_test, y_test)) # Accuracy
+# Accuracy is 86% so is it good?
+
+# Now the question is why we choose K=3 or what value we need to choose K.
+# (K는 몇이 적당할까? 어떻게 결정할까?)
+# The answer is in 'Model Complexity'. 
+# -> K has general name. It is called a hyper-parameter.
+# For now just know K is hyper-parameter and we need to choose it that
+# give the best performance.
+
+# -> If K is small, model is complex model can lead to "Overfit"!!
+# It means that model memorizes the train sets and cannot predict test set with good accuracy.
+
+# -> If K is big, model is less complex model can lead to "Underfit"!!
+
+# At below, I range K value from 1 to 25 and find accuracy for each K value.
+# As you can see in plot, when K is 1, it memorizes the train sets (=Overfit)
+# and cannot give good accuracy on test set. 
+# Also if K is 18, model is lead to "Underfit". 
+# Again accuracy is not enough. However look at when K is 18(best performance),
+# accuracy has highest value almost 88%
+neig = np.arange(1,25)
+train_accuracy = []
+test_accuracy = []
+# Loop over different values of K
+for i, k in enumerate(neig):
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(x_train, y_train)
+    train_accuracy.append(knn.score(x_train, y_train))
+    test_accuracy.append(knn.score(x_test, y_test))
+
+# Plot
+plt.figure(figsize=(13,8))
+plt.plot(neig, test_accuracy, label="Testing Accuracy")
+plt.plot(neig, train_accuracy, label="Training Accuracy")
+plt.legend()
+plt.title("Performance Comparing")
+plt.xlabel("Number of Neighbors")
+plt.ylabel("Accuracy")
+plt.xticks(neig)
+plt.show()
+print("Best accuracy is {} with K = {}".format(np.max(test_accuracy), 1+test_accuracy.index(np.max(test_accuracy))))
