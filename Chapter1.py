@@ -260,3 +260,70 @@ cv_result = cross_val_score(reg,x,y,cv=k) # uses R^2 as score
 print("CV Scores : ", cv_result) 
 print("CV scores average : ", np.sum(cv_result)/k)
 # -> reg.fit 즉, 아직 학습을 안시켜서 score가 낮음.
+
+## Regularized Regression
+# As we learn linear regression choose parameters(=coefficients) while minimizing lost function.
+# If linear regression thinks that one of the feature is important,
+# it gives 'high coefficient' to this feature. 
+# However, this can cause 'OVERFITTING PROBLEM' that is like memorizing in KNN.
+# In order to avoid overfitting., we use "Reguralization" that penalize large coefficients.
+
+# - Ridge(산등성이) regression : First regularization technique. 
+# Also, it is called "L2 Regularization".
+#   - Ridge regression lost function = OLS(sum of square of residuals) + (alpha * sum(absolute_value(parameter)^2))
+#   - alpha is (hyper-)parameter we need to choose to fit(train) and predict.
+#   - Picking alpha is similar to picking K in KNN. 
+#     (* 우리는 KNN에서 K를 고를 때, 1~25부터 쫙 결과를 나열해보고 K=18일때 가장 퍼포먼스가 좋았다.)
+#   - So alpha is hyperparameter that we need to choose for the best accuracy and model complexity.
+#     이러한 최적의 hyper-parameter값을 찾아내는 과정(process)을 "Hyperparameter Tuning"이라고 한다.
+#   - alpha 값이 0이라면, Ridge regression lost function은 그냥 OLS가 되며 이는 Linear Regression와 같다.
+#   - If alpha is small that can cause OVERFITTING. (while being big, it can cause UNDERFITTING)
+#   - Do not as what is small and big. These can be changed from problem to problem. (케바케라는 뜻)
+
+# - Lasso(올가미밧줄) regression : Second regularization technique. 
+# Also, it is called "L1 Regularization".
+#   - Lasso regression lost function = OLS(sum of square of residuals) + (alpha * sum(absolute_value(parameter)^1))
+
+# Linear vs. Ridge(L2) vs. Lasso(L1)
+
+# Ridge(L2) regression
+from sklearn.linear_model import Ridge
+x_train, x_test, y_train, y_test = train_test_split(x,y,random_state=2, test_size=0.3)
+ridge = Ridge(alpha=0.1, normalize=True)
+ridge.fit(x_train, y_train)
+ridge_predict = ridge.predict(x_test)
+print("Ridge score : ", ridge.score(x_test, y_test))
+
+# Lasso(L1) regression
+from sklearn.linear_model import Lasso
+x = np.array(data1.loc[:, ['pelvic_incidence', 'pelvic_tilt numeric', 'lumbar_lordosis_angle', 'pelvic_radius']])
+x_train, x_test, y_train, y_test = train_test_split(x,y,random_state=3, test_size=0.3)
+lasso = Lasso(alpha=0.1, normalize=True)
+lasso.fit(x_train, y_train)
+ridge_predict = lasso.predict(x_test)
+print('Lasso score : ', lasso.score(x_test, y_test))
+print("Lasso coefficients : ", lasso.coef_) # Oh
+# lasso.coef_ = [0.82498243, -0.7209057, 0., -0.]
+# -> As you can see 'pelvic_incidence' & 'pelvic_tilt numeric' are 'Important Features' 
+#    but others are not important.
+
+# We need to use "Confusion Matrix" as model measurement matrix in imbalance data.
+# While using Confusion Matrix, lets use Random Forest Classifier to diversify classification methods.
+# tp : Prediction is positive(normal) & Actual is positive(normal).
+# fp : Prediction is positive(normal) & Actual is negative(abnormal).
+# tn : Prediction is negative(abnormal) & Actual is negative(abnormal).
+# fn : Prediction is negative(abnormal) & Actual is positive(normal).
+# Precision = tp / (tp+fp)
+# Recall = tp / (tp+fn)
+# f1 = ( 2 * Precision * Recall ) / (Precision + Recall)
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
+x, y = data.loc[:, data.columns != 'class'], data.loc[:, 'class']
+x_train, x_test, y_train, y_test = train_test_split(x,y,random_state=1, test_size=0.3)
+rf = RandomForestClassifier(random_state=4)
+rf.fit(x_train, y_train)
+y_pred = rf.predict(x_test)
+cm = confusion_matrix(y_test, y_pred)
+print("Confusion matrix : \n", cm)
+print("Classification Report : \n", classification_report(y_test, y_pred))
+# RF랑 Confusion matrix 공부하기.
