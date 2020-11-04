@@ -327,3 +327,10 @@ cm = confusion_matrix(y_test, y_pred)
 print("Confusion matrix : \n", cm)
 print("Classification Report : \n", classification_report(y_test, y_pred))
 # RF랑 Confusion matrix 공부하기.
+
+# Visualize with seaborn library
+'''
+sns.heatmap(cm, annot=True, fmt="d")
+plt.show()
+'''
+
