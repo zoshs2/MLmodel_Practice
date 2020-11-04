@@ -313,9 +313,9 @@ print("Lasso coefficients : ", lasso.coef_) # Oh
 # fp : Prediction is positive(normal) & Actual is negative(abnormal).
 # tn : Prediction is negative(abnormal) & Actual is negative(abnormal).
 # fn : Prediction is negative(abnormal) & Actual is positive(normal).
-# Precision = tp / (tp+fp)
-# Recall = tp / (tp+fn)
-# f1 = ( 2 * Precision * Recall ) / (Precision + Recall)
+# Precision = tp / (tp+fp) : 정확도; Positive(p)로 예측한 관측치 중 실제 Positive한 관측치 비율을 나타내는 지표.
+# Recall = tp / (tp+fn) : 재현율; 실제값이 Positive한 관측치 중 적중한 예측치의 비율을 나타내는 지표.
+# f1 (score)= ( 2 * Precision * Recall ) / (Precision + Recall) (f_beta지표도 있다.)
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 x, y = data.loc[:, data.columns != 'class'], data.loc[:, 'class']
