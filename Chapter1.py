@@ -309,7 +309,7 @@ print("Lasso coefficients : ", lasso.coef_) # Oh
 
 # We need to use "Confusion Matrix" as model measurement matrix in imbalance data.
 # While using Confusion Matrix, lets use Random Forest Classifier to diversify classification methods.
-# tp : Prediction is positive(normal) & Actual is positive(normal).
+# tp : Prediction is positive(normal) & Actual is positive(normal). (빈도 수)
 # fp : Prediction is positive(normal) & Actual is negative(abnormal).
 # tn : Prediction is negative(abnormal) & Actual is negative(abnormal).
 # fn : Prediction is negative(abnormal) & Actual is positive(normal).
@@ -331,6 +331,59 @@ print("Classification Report : \n", classification_report(y_test, y_pred))
 # Visualize with seaborn library
 '''
 sns.heatmap(cm, annot=True, fmt="d")
+plt.show()
+'''
+
+## ROC(Receiver Operating Characteristic) Curve with Logistic Regression
+# 레이더 이미지 분석 성능을 평가하기 위해 개발된 ROC Curve.
+# -> 두 분류 분석 모형을 비교 분석 결과를 가시화할 수 있다는 점에서 유용한 평가 도구이다.
+# (즉, 오분류표(Confusion Matrix)는 하나의 분류분석모형을 집중 평가한데 반해, 
+#      ROC Curve는 두 가지 모형을 비교하여 우위를 가린다.)
+# * Sensitivity(민감도) 와 Specificity(특이도)에 대해 알아야 한다.
+# 민감도와 특이도의 개념은 오분류표(Confusion Matrix)에서부터 시작한다.
+# - Sensitivity(민감도)
+#   = TP / P : Positive한 모든 실제 관측치 중 예측치가 적중한 정도.
+# - Specificity(특이도)
+#   = TN / N : Negative한 모든 실제 관측치 중 예측치가 적중한 정도.
+# 모형의 성과를 평가하는 기준은 ROC Curve의 밑부분 면적(Area Under the ROC Curve, AUC)이 넓을 수록 
+# 좋은 모형으로 평가한다. -> AUC가 1에 가까울수록 좋은 모형으로 평가된다.
+# (x축 : FP Ratio(1-특이도), y축 : 민감도(Sensitivity))
+# -> 즉 ROC그래프의 x축은 FP / N을 말한다. (False Positive rate)
+#      y축은 TP / P 로 True Positive rate이다.
+# sklearn.metrics의 roc_curve메소드로 쉽게 구현할 수 있다.
+
+# Logistic Regression output is probabilities. (엄밀히 말하면, 이 확률을 사후확률(Posterior Probability)라고 한다.)
+# 정리하자면, 예측변수 값이 주어질 때, 반응변수(target variable; label;)의 각 범주에 속할 확률이 얼마인지 추정하며(여기까진 예측모형)
+# 이 추정확률(사후확률)을 기준치에 따라 분류하는 목적으로 사용하는 것이다. (여기까지가 분류모형)
+# 따라서 로지스틱 회귀모형은 범주형 반응변수에 적용되는 회귀분석 모형이다.
+# If probability is higher than 0.5 data is labeled 1(abnormal) else 0(normal).
+# By default logistic regression threshold is 0.5
+# In this curve, x axis is False Positive rate(FP/N) & y axis is True Positive rate(TP/P)
+# If the curve in plot is closer to left-top corner, model is more accurate.
+# fpr : False Positive rate (FP/N)
+# tpr : True Positive rate (TP/P)
+
+from sklearn.metrics import roc_curve
+from sklearn.linear_model import LogisticRegression # 로지스틱 회귀(범주형)
+from sklearn.metrics import confusion_matrix, classification_report
+# abnormal = 1 & normal = 0
+data['class_binary'] = [1 if i == 'Abnormal' else 0 for i in data.loc[:,'class']]
+x, y = data.loc[:,(data.columns != 'class') & (data.columns != 'class_binary')], data.loc[:, 'class_binary']
+x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=0.3, random_state=42)
+logreg = LogisticRegression()
+logreg.fit(x_train, y_train) # training
+ # LogisticRegression에는 .predict_proba()라는 범주별 확률을 반환하는 메소드가 있다.
+y_pred_prob = logreg.predict_proba(x_test)[:,1]
+# shape of (93, 2) : 첫 번째 열은 0-클래스에 속할 확률이고, 두 번째 열은 1-클래스에 속할 확률이다.
+# 따라서 두 확률의 합은 항상 1이다.
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+# Plot ROC Curve
+'''
+plt.plot([0,1],[0,1], 'k--')
+plt.plot(fpr, tpr)
+plt.xlabel("False Positive Rate(FP/N)")
+plt.ylabel("True Positive Rate(TP/P)")
+plt.title('ROC Curve')
 plt.show()
 '''
 
