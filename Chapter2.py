@@ -79,6 +79,65 @@ plt.show()
 #   * The majority of two clusters are abnormal patients.
 
 # Cross Tabulation Table
+'''
 df = pd.DataFrame({'label':labels, 'class':class_data})
 ct = pd.crosstab(df['label'],df['class'])
 print(ct)
+'''
+
+# 적정 군집 수(k)를 파악하는 방법
+# KMeans를 수행하기 전에는 클러스터의 개수(k)를 명시적으로 지정해줘야 한다.
+# 데이터를 2개로 군집화(clustering)할 것인지, 3개로 할 것인지 등..
+# 그렇다면, 몇 개의 클러스터 수(k)가 가장 적절한지 어떻게 알 수 있을까?
+# "Inertia value"라는 값을 보면, 적정 클러스터 수를 선택할 수 있는 힌트를 얻을 수 있다.
+# Inertia value : 
+# 군집화가 된 후에, 각 군집별 중심점(centroid)으로부터 군집 내 데이터들 사이의 거리를 합산(sum)한 것으로
+# 일종의 '군집의 응집도'를 나타내는 값이다.
+# 따라서 이 inertia value값이 작을 수록 '군집의 응집도가 높다'는 뜻이고, 잘 군집화되었다고 볼 수 있다.
+# 하지만 그러면서도, 일반적으로 inertia value가 낮을 수록, 클러스터의 수(k)도 많아지는 trade off 경향이 있으므로
+# 과하게 클러스터 수가 너무 많지는 않으면서도 inertia value가 작은 적당선(elbow)를 캐치하는 것이 포인트다!
+
+# Inertia Value
+inertia_list = np.empty(8)
+for i in range(0,8):
+    kmeans = KMeans(n_clusters=i+1)
+    kmeans.fit(data2)
+    inertia_list[i] = kmeans.inertia_
+
+'''
+plt.plot(range(1,9), inertia_list, '-o')
+plt.xlabel("Number of Cluster (k)")
+plt.ylabel("Inertia Value")
+plt.show()
+'''
+# 그래프를 봤을 때, k=3~5 사이가 적당한 선택일 것 같다.
+
+## Standardization (표준화)
+# 학습 데이터의 각 속성별 값의 범위가 넓고, 그 범위가 다른 속성값과 차이도 크다면, 머신러닝 학습이 잘 안되는 경우가 있다.
+# 예를 들어, 속성 A의 값 범위가 1~10000 사이 정도이고, 속성 B의 값 범위가 1~10 사이라면
+# 학습이 제대로 되지 않을 수 있다.
+# 그래서 각 속성의 값 범위를 (동일하게) 일치시켜주는 과정을 "스케일링(Feature Scaling)"이라고 한다.
+# 이 스케일링에 대한 여러가지 기법과 알고리즘이 있다.
+# 여기서는 속성들의 모든 값을 0~1사이의 값으로 일치시켜주는 StandardScaling방법을 사용한다.
+# -> from sklearn.preprocessing import StandardScaler ( * Do not forget standardization as pre-processing. )
+# 즉, 학습을 하기 전에 먼저 데이터를 StandardScaler로 스케일링해주고, 이렇게 스케일링된 데이터를 
+# 모델에 넣어서 학습시킨다. 
+# 이는 지도학습와 비지도학습에서 모두 중요한 절차이다.
+# We can use pipeline.
+# Pipeline : The purpose of the pipeline is to assemble several steps 
+# like KMeans(cluster) and StandardScaler(pre-processing). 
+# (즉, 일련의 절차를 하나로 묶는 것. 전처리와 모델학습을 묶음; Pipeline)
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline # 파이프라인! 이걸로 전처리과정과 모델학습과정을 합칠거다.
+scaler = StandardScaler()
+kmeans = KMeans(n_clusters=2) # 클러스터 수(k) = 2
+pipe = make_pipeline(scaler, kmeans) # 스케일링과정(StandardScaler)과 모델학습(Kmeans)과정을 파이프라인으로 묶음.
+pipe.fit(data)
+labels = pipe.predict(data) # kmeans는 군집화 후, 그 결과를 0~(k-1)사이의 정수 값으로 라벨링하여 반환한다.
+df = pd.DataFrame({'labels':labels, 'class':class_data})
+ct = pd.crosstab(df['labels'], df['class']) # Cross Tabulation Table
+print(ct)
+
+
+
+
