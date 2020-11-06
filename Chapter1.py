@@ -387,3 +387,32 @@ plt.title('ROC Curve')
 plt.show()
 '''
 
+## Hyper-parameter Tuning
+# As I mention at KNN there are hyperparameters that are need to be tuned.
+# For example,
+# ex.1) k in KNN
+# ex.2) alpha at Ridge(L2) & Lasso(L1) Regression
+# ex.3) Random Forest parameters like max_depth
+# ex.4) Linear Regression parameters(coefficients)
+# Hyper-parameter Tuning
+# - try all of combinations of different parameters.
+# - fit all of them
+# - measure prediction performance
+# - see how well each performs
+# - finally choose best hypeparameters
+# This process(hyperparameter tuning) is the most difficult part of this tutorial.
+# We only need is one line code that is GridSearchCV
+# - grid : K is from 1 to 50(exclude)
+# - GridSearchCV takes knn and grid & makes grid search. It means combination of all hyperparameters. Here it is k.
+from sklearn.model_selection import GridSearchCV
+grid = {'n_neighbors' : np.arange(1,50)} # 검증할 k(hyper-parameter)의 목록들 k-nn
+knn = KNeighborsClassifier() # 앞에서는 KNeighborsClassifier(n_neighbors=3) 라고 k=3 이라고 명시했었다.
+# 하지만 여기서는 이 k값을 tuning(최적의 k를 찾아내는 작업)하는 것이기 때문에, 따로 명시하지 않는다.
+knn_cv = GridSearchCV(knn, grid, cv=3) # GridSearchCV
+knn_cv.fit(x,y)
+
+# Print Hyper-parameter
+print("Tuned hyperparameter k : {}".format(knn_cv.best_params_)) 
+print("Best Score : {}".format(knn_cv.best_score_))
+# best parameter는 4 (즉, k=4)가 나왔고, 그 때의 score(즉, Best score)는 약 76%가 나왔다.
+
