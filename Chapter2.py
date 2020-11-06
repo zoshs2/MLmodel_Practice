@@ -138,6 +138,55 @@ df = pd.DataFrame({'labels':labels, 'class':class_data})
 ct = pd.crosstab(df['labels'], df['class']) # Cross Tabulation Table
 print(ct)
 
+## Principle Component Analysis (PCA) : 주성분분석
+# (참고 : https://alex-blog.tistory.com/entry/데이터-분석을-위한-통계분석3-PCA)
+# Fundamental dimension reduction technique. (데이터 차원을 압축시키는 기법; 기여도가 적은 차원은 배제함으로써)
+# 여기서 '주성분'이란 전체 데이터들의 분산을 가장 잘 설명하는 '성분'이라고 할 수 있다.
+# 즉, 주성분분석이란 말 그대로 여러 개의 변수들의 분산을 활용하여 '대표적인 변수들을 추출해내는 과정'이라고 할 수 있다.
+# * 차원의 저주(Curse of Dimensionality)
+#   - 기계학습, 데이터마이닝 등에서 사용하는 용어이다.
+#   - 데이터의 차원(dimension; 변수들의 개수라고도 생각할 수 있다.)이 증가할수록 해당 공간의 부피(크기)가 
+#     '기하급수적으로' 증가하기 때문에, 동일한 갯수의 데이터의 밀도는 차원이 증가할수록 '급속도로' 희박(sparse)해진다.
+#     따라서, 차원이 증가할수록 데이터의 분포 분석 또는 모델추정에 
+#     필요한 샘플 데이터의 개수가 기하급수적으로 증가하게 되는데 이러한 어려움을 표현한 용어가 '차원의 저주'이다.
+#     (단적인 비유로, 차원이 증가함에따라 모델의 성능이 안좋아진다.)
+#     따라서 데이터 분석 등의 차원에 관계된 문제에 있어서는 어떻게든 '핵심이 되는 파라미터만을 선별'하여 
+#     문제의 차원을 낮추고자 하는 것이 일반적이다.
 
+# 이러한 '차원의 저주'를 극복하기 위해, 크게 두 가지 Approach가 있는데...
+# 1. Feature Selection(변수 선택)
+#    - 직역한 그대로 몇몇의 변수들만 정하고 나머지 변수들은 '버리는 방법'이다. 
+#      이때는 중첩되는 변수가 있는지 확인해보고 상관계수나 VIF(다중공선성)가 높은 변수들 중 하나를 삭제한다.
+#      또는 모델에 많은 영향을 주는 변수들을 우선적으로 찾아내는 방법으로도 해결이 가능하다.
+# 2. Feature Extraction(변수 추출)
+#    - 변수 추출 방법은 다른 변수들을 삭제하기보다는 '조합' 하여 새로운 변수로 만들어내는 작업을 뜻한다. 
+#      대표적으로 오늘 공부하는 PCA(주성분분석) 방법이 바로 변수 추출법(Feature Extraction)에 속한다. 
 
+# 이처럼 PCA(주성분분석)의 핵심은 데이터 '압축'이다.
+# 이는 "데이터의 변수(차원)가 너무 많은데, 이것을 '종합적으로' 나타내고 분석에 사용할 수 없을까?"라는 생각에서 고안된 방법이다.
+#   -> 여러 변수들의 '정보'를 '압축'하여 더 적은 수의 변수로 나타낸다.
+# 여기서 변수들의 '정보'의 양을 '분산(variance)'의 크기로 말한다.
+# 즉, '몇 번째까지의 주성분'이 해당 변수의 최대 분산(정보)을 기여하고 있는지 파악해야한다.
 
+# PCA
+from sklearn.decomposition import PCA
+pca = PCA()
+pca.fit(data)
+transformed = pca.transform(data)
+print("Principle Components : ", pca.components_) # 주성분들
+
+# PCA Variance (정보량 파악)
+scaler = StandardScaler()
+pca = PCA()
+pipeline = make_pipeline(scaler, pca)
+pipeline.fit(data)
+
+plt.bar(range(pca.n_components_), pca.explained_variance_)
+plt.xlabel("PCA feature")
+plt.ylabel("Variance")
+plt.show()
+# pca.explained_variance_ (또는 pca.explained_variance_ratio_)로 각 주성분의 기여도를 파악하고
+# (예를들어, "음.. 3번째 주성분만으로도 95%의 정보량을 기여하는군.")
+# 그 다음 transformed = pca.transform(data)를 통해 주어진 데이터셋을 표현하는 주성분별 모델결과를 가지고와서
+# transformed[:, :3] 로 '3번째 주성분'값까지만 가지고와서 활용하는 것이다.
+# ** 실전 활용연습이 조금 더 필요해보임!!!
